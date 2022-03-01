@@ -14,7 +14,8 @@
 #include <SPI.h>              // include libraries
 #include <LoRa.h>
 
-const long frequency = 433E6;  // LoRa Frequency
+const long frequency = 433.5E6;  // LoRa Frequency
+int spreading = 10;
 const int csPin = 4;          // LoRa radio chip select
 const int resetPin = 2;        // LoRa radio reset
 const int irqPin = 3;          // change for your board; must be a hardware interrupt pin
@@ -29,16 +30,24 @@ int interval = 2000;          // interval between sends
 
 int LED_pin_8 = 8;
 int LED_pin_5 = 5;
+String LED_pin_A3 = "A3";
+String LED_pin_A7 = "A7";
 
 void setup() 
 {
   pinMode(LED_pin_8, OUTPUT);
   pinMode(LED_pin_5, OUTPUT);
+  pinMode(A3, OUTPUT);
+  pinMode(A7, OUTPUT);
   digitalWrite(LED_pin_8, HIGH);
   digitalWrite(LED_pin_5, HIGH);
+  digitalWrite(A3, HIGH);
+  digitalWrite(A7, HIGH);
   delay(1000);
   digitalWrite(LED_pin_8, LOW);
   digitalWrite(LED_pin_5, LOW);
+  digitalWrite(A3, LOW);
+  digitalWrite(A7, LOW);
   Serial.begin(9600);                   // initialize serial
   while (!Serial);
 
@@ -47,11 +56,12 @@ void setup()
   // override the default CS, reset, and IRQ pins (optional)
   LoRa.setPins(csPin, resetPin, irqPin);// set CS, reset, IRQ pin
 
-  if (!LoRa.begin(433E6)) {             // initialize ratio at 915 MHz
+  if (!LoRa.begin(frequency)) {             // initialize ratio at 915 MHz
     Serial.println("LoRa init failed. Check your connections.");
     while (true);                       // if failed, do nothing
   }
-  LoRa.setSpreadingFactor(12);           // ranges from 6-12,default 7 see API docs
+  // LoRa.setSpreadingFactor(12);           // ranges from 6-12,default 7 see API docs
+  LoRa.setSpreadingFactor(spreading);           // ranges from 6-12,default 7 see API docs
   // LoRa.setSignalBandwidth(31.25E3); 
   // LoRa.setCodingRate4(5);
   // LoRa.enableCrc();
