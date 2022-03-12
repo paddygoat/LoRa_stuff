@@ -21,7 +21,7 @@ const int LED_pin_5 = 5;
 
 ros::NodeHandle  nh;
 std_msgs::String str_msg;
-ros::Publisher chatter("chatter", &str_msg);
+ros::Publisher chatter("received_from_dog", &str_msg);
 // char inChars[13] = "hello world";
 // char inChars[20];
 
