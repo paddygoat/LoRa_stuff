@@ -21,8 +21,9 @@ const int LED_pin_5 = 5;
 
 ros::NodeHandle  nh;
 std_msgs::String str_msg;
-ros::Publisher chatter("lora_reciever_base", &str_msg);
-char inChar[0];
+ros::Publisher chatter("chatter", &str_msg);
+// char inChars[13] = "hello world";
+// char inChars[20];
 
 void setup() 
 {
@@ -43,9 +44,9 @@ void setup()
   digitalWrite(A3, LOW);
   digitalWrite(A7, LOW);
 
-  Serial.begin(9600);                   // initialize serial
+  // Serial.begin(9600);                   // initialize serial. Rememeber to diable this when using ROS.
   // while (!Serial);
-
+  
   Serial.println("LoRa Reciever");
 
   // override the default CS, reset, and IRQ pins (optional)
@@ -65,15 +66,13 @@ void setup()
   // LoRa.writeRegister(REG_PA_DAC, 0x87);  //turn on 3rd amplifier, see 5.4.3
   // LoRa.writeRegister(REG_OCP, 0x20 | 18); //increace power protection to 150mA RegOcp, see 5.4.4
   Serial.println("LoRa init succeeded.");
+  
 }
 
 void loop() 
 {
   // parse for a packet, and call onReceive with the result:
   onReceive(LoRa.parsePacket());
-  str_msg.data = inChar;
-  chatter.publish( &str_msg );
-  nh.spinOnce();
 }
 
 void onReceive(int packetSize) 
@@ -85,15 +84,17 @@ void onReceive(int packetSize)
   byte sender = LoRa.read();            // sender address
   byte incomingMsgId = LoRa.read();     // incoming msg ID
   byte incomingLength = LoRa.read();    // incoming msg length
-  int i = 0;
+  int i = 1;
+  char inChars[0];
+  String message = "";
 
   Serial.println("Message: ");
   while (LoRa.available())
   {
-    inChar[i] = (char)LoRa.read();
-    Serial.print(inChar[i]);
+    message += (char)LoRa.read();
+    i++;
   }
-
+  Serial.print("Print message: ");Serial.print(message);
   /*
   if (incomingLength != incoming.length()) 
   {   // check length for error
@@ -109,6 +110,11 @@ void onReceive(int packetSize)
     // return;                             // skip rest of function
   }
 
+  message.toCharArray(inChars,i);
+  str_msg.data = inChars;
+  chatter.publish( &str_msg );
+  nh.spinOnce();
+  
   // if message is for this device, or broadcast, print details:
   Serial.println("Received from: 0x" + String(sender, HEX));
   Serial.println("Sent to: 0x" + String(recipient, HEX));
