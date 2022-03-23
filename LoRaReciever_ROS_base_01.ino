@@ -22,8 +22,8 @@ const int LED_pin_5 = 5;
 ros::NodeHandle  nh;
 std_msgs::String str_msg;
 ros::Publisher chatter("received_from_dog", &str_msg);
-// char inChars[13] = "hello world";
-// char inChars[20];
+
+char inChar[50];
 
 void setup() 
 {
@@ -38,15 +38,15 @@ void setup()
   digitalWrite(LED_pin_5, HIGH);
   digitalWrite(A3, HIGH);
   digitalWrite(A7, HIGH);
-  delay(1000);
+  delay(5000);             // Do not delete this or it may brick the MCU.
   digitalWrite(LED_pin_8, LOW);
   digitalWrite(LED_pin_5, LOW);
   digitalWrite(A3, LOW);
   digitalWrite(A7, LOW);
 
-  // Serial.begin(9600);                   // initialize serial. Rememeber to diable this when using ROS.
+  // Serial.begin(115200);                   // initialize serial
   // while (!Serial);
-  
+
   Serial.println("LoRa Reciever");
 
   // override the default CS, reset, and IRQ pins (optional)
@@ -66,16 +66,20 @@ void setup()
   // LoRa.writeRegister(REG_PA_DAC, 0x87);  //turn on 3rd amplifier, see 5.4.3
   // LoRa.writeRegister(REG_OCP, 0x20 | 18); //increace power protection to 150mA RegOcp, see 5.4.4
   Serial.println("LoRa init succeeded.");
-  
 }
 
 void loop() 
 {
   // parse for a packet, and call onReceive with the result:
   onReceive(LoRa.parsePacket());
+  delay(1100);
+  Serial.print("inChar: ");Serial.println(inChar);
+  str_msg.data = inChar;
+  chatter.publish( &str_msg );
+  nh.spinOnce();
 }
 
-void onReceive(int packetSize) 
+char onReceive(int packetSize) 
 {
   if (packetSize == 0) return;          // if there's no packet, return
 
@@ -84,17 +88,17 @@ void onReceive(int packetSize)
   byte sender = LoRa.read();            // sender address
   byte incomingMsgId = LoRa.read();     // incoming msg ID
   byte incomingLength = LoRa.read();    // incoming msg length
-  int i = 1;
-  char inChars[0];
-  String message = "";
+  int i = 0;
 
+  
   Serial.println("Message: ");
   while (LoRa.available())
   {
-    message += (char)LoRa.read();
+    inChar[i] = (char)LoRa.read();
     i++;
+    Serial.print(inChar[i]);
   }
-  Serial.print("Print message: ");Serial.print(message);
+
   /*
   if (incomingLength != incoming.length()) 
   {   // check length for error
@@ -110,11 +114,6 @@ void onReceive(int packetSize)
     // return;                             // skip rest of function
   }
 
-  message.toCharArray(inChars,i);
-  str_msg.data = inChars;
-  chatter.publish( &str_msg );
-  nh.spinOnce();
-  
   // if message is for this device, or broadcast, print details:
   Serial.println("Received from: 0x" + String(sender, HEX));
   Serial.println("Sent to: 0x" + String(recipient, HEX));
@@ -126,4 +125,6 @@ void onReceive(int packetSize)
   digitalWrite(LED_pin_8, HIGH);
   delay(50);
   digitalWrite(LED_pin_8, LOW);
+
+  return inChar;
 }
